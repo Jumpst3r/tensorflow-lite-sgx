@@ -118,15 +118,13 @@ else
 endif
 Crypto_Library_Name := sgx_tcrypto
 
-Enclave_Cpp_Files := Enclave/Enclave.cpp Enclave/stdioPatched.cpp Enclave/model.cpp Enclave/output_handler.cpp Enclave/main_functions.cpp Enclave/constants.cpp
+Enclave_Cpp_Files := $(wildcard Enclave/*.cpp)
 
 Enclave_Include_Paths := -IInclude -IEnclave -IEnclave/libs -IEnclave/libs/third_party/flatbuffers/include -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/libcxx
 
-#Enclave_C_Flags := $(Enclave_Include_Paths) -DDEBUG -g -std=c11 -DNDEBUG  -fno-unwind-tables -ffunction-sections -fdata-sections -fmessage-length=0 -DTF_LITE_STATIC_MEMORY -DTF_LITE_DISABLE_X86_NEON -O0 -DLINUX -DTF_LITE_USE_CTIME
 Enclave_C_Flags := $(Enclave_Include_Paths) -DDEBUG -g -DNDEBUG -O0
 
 Enclave_Cpp_Flags := $(Enclave_C_Flags) -fPIE -std=c++11 -DNDEBUG -DTF_LITE_MCU_DEBUG_LOG -fno-rtti -fno-exceptions -fno-threadsafe-statics -fno-unwind-tables -ffunction-sections -fdata-sections -fmessage-length=0 -DTF_LITE_STATIC_MEMORY -DTF_LITE_DISABLE_X86_NEON -O0
-#Enclave_Cpp_Flags := $(Enclave_C_Flags)  -DNDEBUG -DTF_LITE_STATIC_MEMORY -DTF_LITE_DISABLE_X86_NEON -O0
 
 # To generate a proper enclave, it is recommended to follow below guideline to link the trusted libraries:
 #    1. Link sgx_trts with the `--whole-archive' and `--no-whole-archive' options,
