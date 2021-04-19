@@ -4,6 +4,7 @@ data/
 
 # py files
 *.py
+*.yaml
 
 .conf*
 ##### Windows

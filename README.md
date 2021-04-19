@@ -1,10 +1,10 @@
-# Tensorflow Lite For Intel SGX
+## Tensorflow Lite For Intel SGX
 
 ## Description
 
 This repository contains a port of [TensorFlow Lite for Microcontrollers](https://www.tensorflow.org/lite/microcontrollers) library.
 
-The port supports non-quantized float32 models and inputs. The port is model and input agnostic and should work on any [TF light flatbuffer](https://www.tensorflow.org/lite/convert) model and input. 
+The port supports non-quantized `float32` models and compatible `float32` inputs. The port is model and input agnostic and should work on any [TF light flatbuffer](https://www.tensorflow.org/lite/convert) model and input. 
 
 The sole restriction is that the model **must** be compromised of operators supported by the TensorFlow Lite for Microcontrollers library, a full list of supported operators can be found [here](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/micro/all_ops_resolver.cc).
 
