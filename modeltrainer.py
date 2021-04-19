@@ -8,12 +8,13 @@ from keras.utils import np_utils
 import tensorflow as tf
 import os
 
-MODELS_DIR = 'models/'
+MODELS_DIR = 'data/models/'
+INPUTS_DIR = 'data/inputs/'
+
 if not os.path.exists(MODELS_DIR):
     os.mkdir(MODELS_DIR)
 
-MODEL_NO_QUANT_TFLITE = MODELS_DIR + 'model.tflite'
-
+MODEL_NO_QUANT_TFLITE = MODELS_DIR + 'modelCIFAR.tflite'
 
 (X_train, y_train), (X_test, y_test) = cifar10.load_data()
 
@@ -69,4 +70,4 @@ open(MODEL_NO_QUANT_TFLITE, "wb").write(model_no_quant_tflite)
 
 
 # Save an input sample
-val_x[0].reshape(1, -1).astype('float32').tofile('cifar.bin')
+val_x[0].reshape(1, -1).astype('float32').tofile(INPUTS_DIR + 'cifar.bin')

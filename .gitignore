@@ -1,3 +1,11 @@
+# data dir
+
+data/
+
+# py files
+*.py
+
+.conf*
 ##### Windows
 # Windows thumbnail cache files
 Thumbs.db
