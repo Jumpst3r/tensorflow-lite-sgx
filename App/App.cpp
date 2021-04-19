@@ -158,22 +158,13 @@ int initialize_enclave(void)
     
     /* Call sgx_create_enclave to initialize an enclave instance */
     /* Debug Support: set 2nd parameter to 1 */
-    ret = sgx_create_enclave(ENCLAVE_FILENAME, SGX_DEBUG_FLAG, NULL, NULL, &global_eid, NULL);
+    ret = sgx_create_enclave(ENCLAVE_FILENAME, 1, NULL, NULL, &global_eid, NULL);
     if (ret != SGX_SUCCESS) {
         print_error_message(ret);
         return -1;
     }
 
     return 0;
-}
-
-/* OCall functions */
-void ocall_print_string(const char *str)
-{
-    /* Proxy/Bridge will check the length and null-terminate 
-     * the input string to prevent buffer overflow. 
-     */
-    printf("%s", str);
 }
 
 
@@ -185,13 +176,12 @@ int SGX_CDECL main(int argc, char *argv[])
 
 
     /* Initialize the enclave */
-    if(initialize_enclave() < 0){
-        printf("Enter a character before exit ...\n");
-        getchar();
+    if(initialize_enclave() < 0 || argc != 3){
+        printf("Usage: ./app <model path> <input path> \n");
         return -1; 
     }
-    
-    perform_inference(global_eid);
+
+    perform_inference(global_eid, argv[1], argv[2]);
     sgx_destroy_enclave(global_eid);
     
     printf("Info: SampleEnclave successfully returned.\n");
@@ -199,3 +189,57 @@ int SGX_CDECL main(int argc, char *argv[])
     return 0;
 }
 
+
+/* OCall functions */
+
+
+void ocall_print_string(const char *str) {
+    fprintf(stderr, "%s", str);
+}
+
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+int ocall_get_filesize(const char *modelname, long *f_size){
+
+	FILE *fp = fopen(modelname, "rb");
+	if(fp == NULL){
+		printf("Model file %s not found\n", modelname);
+        return -1;
+	}
+
+	fseek(fp, 0, SEEK_END);
+	long fsize = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	*f_size = fsize;
+	close(fp);
+    return 0;
+}
+
+int ocall_load_model(const char *modelname, long f_size, unsigned char *data){
+	FILE *fp = fopen(modelname, "rb");
+	if(fp == NULL){
+		printf("Model file %s not found\n", modelname);
+		return -1;
+	}
+
+    size_t total_len = fread(data, f_size, 1, fp);
+    fclose(fp);
+    return total_len;
+
+}
+
+int ocall_load_input(const char *modelname, long f_size, float *data){
+	FILE *fp = fopen(modelname, "rb");
+	if(fp == NULL){
+		printf("Model file %s not found\n", modelname);
+		return -1;
+	}
+
+    size_t total_len = fread(data, f_size, 1, fp);
+    fclose(fp);
+    return total_len;
+
+}

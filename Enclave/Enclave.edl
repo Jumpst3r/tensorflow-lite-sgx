@@ -5,12 +5,13 @@ enclave {
     
 
     trusted{
-        public void perform_inference(void);
+        public void perform_inference([in, string] char *str, [in, string] char *filename);
     };
-
 
     untrusted {
         void ocall_print_string([in, string] const char *str);
+        int ocall_get_filesize([in, string] const char *fname, [out] long *fsize); 
+		int ocall_load_model([in, string] const char* fname, long fsize, [out, size=fsize] unsigned char* data);  
+		int ocall_load_input([in, string] const char* fname, long fsize, [out, size=fsize] float* data);  
     };
-
 };

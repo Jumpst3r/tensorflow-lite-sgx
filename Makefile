@@ -32,7 +32,7 @@
 ######## SGX SDK Settings ########
 
 SGX_SDK ?= /opt/intel/sgxsdk
-SGX_MODE ?= HW
+SGX_MODE ?= SIM
 SGX_ARCH ?= x64
 SGX_DEBUG ?= 1
 
@@ -63,12 +63,12 @@ endif
 endif
 
 ifeq ($(SGX_DEBUG), 1)
-        SGX_COMMON_FLAGS += -O3
+        SGX_COMMON_FLAGS += -O0
 else
-        SGX_COMMON_FLAGS += -O3
+        SGX_COMMON_FLAGS += -O0
 endif
 
-SGX_COMMON_FLAGS += -Wall -Wextra -Winit-self -Wpointer-arith -Wreturn-type \
+SGX_COMMON_FLAGS += -Wall -fpermissive -Wextra -Winit-self -Wpointer-arith -Wreturn-type \
                     -Waddress -Wsequence-point -Wformat-security \
                     -Wmissing-include-dirs -Wfloat-equal -Wundef -Wshadow \
                     -Wcast-align -Wcast-qual -Wconversion -Wredundant-decls
@@ -86,14 +86,14 @@ endif
 App_Cpp_Files := App/App.cpp
 App_Include_Paths := -IInclude -IApp -I$(SGX_SDK)/include
 
-App_C_Flags :=  -Wno-attributes $(App_Include_Paths) -fpic
+App_C_Flags :=  -g -Wno-attributes $(App_Include_Paths) -fpic
 
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.
 #   Prerelease - Macro NDEBUG and EDEBUG enabled.
 #   Release - Macro NDEBUG enabled.
 ifeq ($(SGX_DEBUG), 1)
-        App_C_Flags += -DDEBUG -UNDEBUG -UEDEBUG
+        App_C_Flags += -DDEBUG
 else ifeq ($(SGX_PRERELEASE), 1)
         App_C_Flags += -DNDEBUG -DEDEBUG -UDEBUG
 else
@@ -118,22 +118,15 @@ else
 endif
 Crypto_Library_Name := sgx_tcrypto
 
-Enclave_Cpp_Files := Enclave/Enclave.cpp Enclave/model.cpp
+Enclave_Cpp_Files := Enclave/Enclave.cpp Enclave/stdioPatched.cpp Enclave/model.cpp Enclave/output_handler.cpp Enclave/main_functions.cpp Enclave/constants.cpp
 
-Enclave_Include_Paths := -IInclude -IEnclave -IEnclave/src -IEnclave/src/third_party/gemmlowp -IEnclave/src/third_party/flatbuffers/include -IEnclave/src/third_party/ruy -IEnclave/src/third_party/kissfft -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/libcxx
+Enclave_Include_Paths := -IInclude -IEnclave -IEnclave/libs -IEnclave/libs/third_party/flatbuffers/include -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/libcxx
 
-Enclave_C_Flags := $(Enclave_Include_Paths) -DNDEBUG -DTF_LITE_MCU_DEBUG_LOG -nostdinc -fvisibility=hidden -ffunction-sections -fdata-sections -fPIC $(MITIGATION_CFLAGS)
-CC_BELOW_4_9 := $(shell expr "`$(CC) -dumpversion`" \< "4.9")
-ifeq ($(CC_BELOW_4_9), 1)
-	Enclave_C_Flags += -fstack-protector
-else
-	Enclave_C_Flags += -fstack-protector-strong 
-endif
+#Enclave_C_Flags := $(Enclave_Include_Paths) -DDEBUG -g -std=c11 -DNDEBUG  -fno-unwind-tables -ffunction-sections -fdata-sections -fmessage-length=0 -DTF_LITE_STATIC_MEMORY -DTF_LITE_DISABLE_X86_NEON -O0 -DLINUX -DTF_LITE_USE_CTIME
+Enclave_C_Flags := $(Enclave_Include_Paths) -DDEBUG -g -DNDEBUG -O0
 
-Enclave_Cpp_Flags := $(Enclave_C_Flags) -nostdinc++
-
-# Enable the security flags
-Enclave_Security_Link_Flags := -Wl,-z,relro,-z,now,-z,noexecstack
+Enclave_Cpp_Flags := $(Enclave_C_Flags) -fPIE -std=c++11 -DNDEBUG -DTF_LITE_MCU_DEBUG_LOG -fno-rtti -fno-exceptions -fno-threadsafe-statics -fno-unwind-tables -ffunction-sections -fdata-sections -fmessage-length=0 -DTF_LITE_STATIC_MEMORY -DTF_LITE_DISABLE_X86_NEON -O0
+#Enclave_Cpp_Flags := $(Enclave_C_Flags)  -DNDEBUG -DTF_LITE_STATIC_MEMORY -DTF_LITE_DISABLE_X86_NEON -O0
 
 # To generate a proper enclave, it is recommended to follow below guideline to link the trusted libraries:
 #    1. Link sgx_trts with the `--whole-archive' and `--no-whole-archive' options,
@@ -150,7 +143,7 @@ Enclave_Link_Flags := $(MITIGATION_LDFLAGS) $(Enclave_Security_Link_Flags) -lSeg
 	-Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \
 	-Wl,--defsym,__ImageBase=0 -Wl,--gc-sections   \
 	-Wl,--version-script=Enclave/Enclave.lds \
-	-Wl,--start-group -lsgx_tstdc -lsgx_tcxx -lm -ltensorflow-microlite -LEnclave/src -Wl,--end-group \
+	-Wl,--start-group -lsgx_tstdc -lsgx_tcxx -lm -ltensorflow-microlite -LEnclave/libs -Wl,--end-group \
 
 
 Enclave_Cpp_Objects := $(sort $(Enclave_Cpp_Files:.cpp=.o))
@@ -181,6 +174,9 @@ endif
 .PHONY: all target run
 all: .config_$(Build_Mode)_$(SGX_ARCH)
 	@$(MAKE) target
+
+Enclave/libs/libtensorflow-microlite.a:
+	cd Enclave/libs && make -j4 lib
 
 ifeq ($(Build_Mode), HW_RELEASE)
 target:  $(App_Name) $(Enclave_Name)
@@ -257,10 +253,10 @@ Enclave/%.o: Enclave/%.cpp Enclave/Enclave_t.h
 .PHONY: clean
 
 Enclave/src/libtensorflow-microlite.a:
-	@cd Enclave/src && make
+	@cd Enclave/src && make -j4
 	@echo "GEN => $@"
 
-$(Enclave_Name): Enclave/Enclave_t.o $(Enclave_Cpp_Objects) Enclave/src/libtensorflow-microlite.a
+$(Enclave_Name): Enclave/Enclave_t.o $(Enclave_Cpp_Objects) Enclave/libs/libtensorflow-microlite.a
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
@@ -270,4 +266,4 @@ $(Signed_Enclave_Name): $(Enclave_Name)
 
 clean:
 	@rm -f .config_* $(App_Name) $(Enclave_Name) $(Signed_Enclave_Name) $(App_Cpp_Objects) App/Enclave_u.* $(Enclave_Cpp_Objects) Enclave/Enclave_t.*
-	cd Enclave/src && make clean
+	cd Enclave/libs && make clean
