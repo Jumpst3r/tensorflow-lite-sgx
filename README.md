@@ -1,6 +1,6 @@
 ## Tensorflow Lite For Intel SGX
 
-![](/home/nicolas/tf-lite-sgx/header.png)
+![](header.png)
 
 ## Description
 
