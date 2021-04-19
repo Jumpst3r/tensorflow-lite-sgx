@@ -1,5 +1,7 @@
 ## Tensorflow Lite For Intel SGX
 
+![](/home/nicolas/tf-lite-sgx/header.png)
+
 ## Description
 
 This repository contains a port of [TensorFlow Lite for Microcontrollers](https://www.tensorflow.org/lite/microcontrollers) library.
