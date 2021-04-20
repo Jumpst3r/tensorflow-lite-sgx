@@ -1,9 +1,16 @@
-## Tensorflow Lite For Intel SGX
+# Tensorflow Lite For Intel SGX
 
-![](header.png)
+<p align="center">
+  <img width="600" src="header.png">
+</p>
 
-Table of Contents
-=================
+
+
+*A minimal port of the Tensorflow Lite for Microcontrollers on Intel SGX*
+
+
+
+## Table of Contents
 
   * [Description](#Description)
   * [Disclaimer](#Disclaimer)
