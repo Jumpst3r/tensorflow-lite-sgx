@@ -7,6 +7,13 @@ data/
 *.yaml
 
 .conf*
+
+# Enclave headers
+*_t.h
+*_t.c
+*_u.h
+*_u.c
+
 ##### Windows
 # Windows thumbnail cache files
 Thumbs.db
