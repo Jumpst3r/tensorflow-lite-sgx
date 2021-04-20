@@ -76,38 +76,36 @@ void load_data(float *data, TfLiteTensor *input)
 
 void perform_inference(char *model_path, char *input_path)
 {
-
+  printf("IN ENCLAVE\n");
   // Read the tflight model from disk:
-  long fsize;
-  int res = get_filesize(model_path, &fsize);
+  long fsize_model;
+  int res = get_filesize(model_path, &fsize_model);
   if (res < 0)
   {
     printf("failed to read model file\n");
     return;
   }
 
-  unsigned char tfmodel[fsize + 1];
-  int res1 = load_model(model_path, fsize, tfmodel);
+  unsigned char tfmodel[fsize_model + 1];
+
+  int res1 = load_model(model_path, fsize_model, tfmodel);
   if (res1 < 0)
   {
     printf("failed to read model file\n");
     return;
   }
 
-  // load input data
-
-  // Get input length
-
-  long isize;
-  int res3 = get_filesize(input_path, &isize);
+  long fsize_input;
+  int res3 = get_filesize(input_path, &fsize_input);
   if (res3 < 0)
   {
     printf("failed to read input file\n");
     return;
   }
 
-  float tfinput[isize + 1];
-  load_input(input_path, isize, tfinput);
+  float tfinput[fsize_input + 1];
+  load_input(input_path, fsize_input + 1, tfinput);
+  printf("loaded input\n");
 
   setup(tfmodel);
 
@@ -124,7 +122,7 @@ void perform_inference(char *model_path, char *input_path)
   printf("[-ENCLAVE-] Inference results: (output dim: %d)\n", output->dims[1].data[0]);
 
   for (int i = 0; i < (output->dims[1].data[0]); i++){
-    printf("output[%d] = %2f \n",i, output->data.f[i]);
+    printf("[-] output[%d] = %2f \n",i, output->data.f[i]);
   }
   
 }

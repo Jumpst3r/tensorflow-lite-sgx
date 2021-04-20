@@ -213,13 +213,15 @@ int ocall_get_filesize(const char *modelname, long *f_size){
 	fseek(fp, 0, SEEK_END);
 	long fsize = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
+
 	*f_size = fsize;
 	close(fp);
     return 0;
 }
 
 int ocall_load_model(const char *modelname, long f_size, unsigned char *data){
-	FILE *fp = fopen(modelname, "rb");
+    printf("in ocall, fsize: %ld \n", f_size);
+    FILE *fp = fopen(modelname, "rb");
 	if(fp == NULL){
 		printf("Model file %s not found\n", modelname);
 		return -1;
@@ -227,6 +229,7 @@ int ocall_load_model(const char *modelname, long f_size, unsigned char *data){
 
     size_t total_len = fread(data, f_size, 1, fp);
     fclose(fp);
+    printf("read %ld bytes\n", total_len);
     return total_len;
 
 }

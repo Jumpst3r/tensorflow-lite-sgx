@@ -42,3 +42,10 @@ Any  [TF light flatbuffer](https://www.tensorflow.org/lite/convert)  model (non 
 nparr.astype('float32').tofile('input.bin')
 ```
 
+Loading large models from disk might require increasing the default stack size on linux. If you run into segmentation faults, try increasing the stack size as follows:
+
+```bash
+ulimit -S -s 131072   
+```
+
+This will temporarly increase the stack size from 8MB to 128MB.
